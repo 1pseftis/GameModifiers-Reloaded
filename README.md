@@ -2,26 +2,18 @@
 
 # CS2-GameModifiers-Plugin
 
-![GitHub issues](https://img.shields.io/github/issues/Lewisscrivens/CS2-GameModifiers-Plugin)
-![GitHub dicussions](https://img.shields.io/github/discussions/Lewisscrivens/CS2-GameModifiers-Plugin)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/Lewisscrivens/CS2-GameModifiers-Plugin)
+![GitHub issues](https://img.shields.io/github/issues/1pseftis/GameModifiers-Reloaded)
+![GitHub discussions](https://img.shields.io/github/discussions/1pseftis/GameModifiers-Reloaded)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/1pseftis/GameModifiers-Reloaded)
 
 </div>
 
-A plugin I put together across a few days for personal use with some mates.
-Thought I might as-well throw it online in-case anyone else wanted to have a go :)
+This is a **continued and updated version** of the original [CS2-GameModifiers-Plugin](https://github.com/Lewisscrivens/CS2-GameModifiers-Plugin), which is now discontinued.  
+The plugin adds fun and unique game modifiers to CS2 servers, inspired by NadeKing’s [video](https://www.youtube.com/watch?v=OQQBUFB56Iw&ab_channel=NadeKing).
 
-Inspiration for this came from NadeKings [video](https://www.youtube.com/watch?v=OQQBUFB56Iw&ab_channel=NadeKing)
+This project improves compatibility, fixes bugs, and keeps the plugin maintained for modern CS2 setups.  
 
-Never made a plugin/mod for a game before so it's been a fun little side project in the evenings, keep this in 
-mind when reading through the code and if I have done something wrong pull requests would be much appreciated!
-
-## ⚠️ NOTICE
-
-I have discontinued work on this for now. It was originally made to have a few fun games with friends and I 
-am now working on other projects and don't have to the time to commit to updating and improving this plugin.
-
-I am happy for anyone to fork and continue work on the plugin :)
+All suggestions, bug reports, or enhancement ideas should now be submitted as [issues](https://github.com/1pseftis/GameModifiers-Reloaded/issues) in this repository.
 
 ## 🔧 Modifiers
 
@@ -108,7 +100,7 @@ I am happy for anyone to fork and continue work on the plugin :)
 ## ⬇️ Installation
 
 1. Ensure MetaMod and CounterStrikeSharp are installed. [Guide](https://github.com/roflmuffin/CounterStrikeSharp/blob/main/INSTALL.md)
-2. Download the latest release from [here](https://github.com/Lewisscrivens/CS2-GameModifiers-Plugin/releases/tag/Release)
+2. Download the latest release from [here](https://github.com/1pseftis/GameModifiers-Reloaded/releases/tag/Release)
 3. Extract the contents of the GameModifiers.zip under `csgo/addons/counterstrikesharp/plugins/`.
 4. Restart the server.
 5. Enjoy!
@@ -235,4 +227,5 @@ There's a few modifiers I wanted to work on:
 
 ## 📚 Suggestions
 
-Would love to here some [feedback](https://github.com/Lewisscrivens/CS2-GameModifiers-Plugin/discussions/1) and ideas as they are quite easy to add.
+If you have ideas or feature requests, please submit them as [issues](https://github.com/1pseftis/GameModifiers-Reloaded/issues) here.  
+This will help keep everything organized and make it easier for me to track and implement new modifiers.

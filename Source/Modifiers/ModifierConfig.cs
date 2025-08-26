@@ -148,25 +148,19 @@ public class ModifierConfig
                     return;
                 }
 
-                if ((foundConVar.Flags & ConVarFlags.FCVAR_REPLICATED) != 0)
+                // Removed foundConVar.Flags checks - try replication first, fallback to server command
+                try
                 {
                     string clientValue = player.GetConVarValue(conVarParts[0]);
                     clientConVarRollbackList.Add($"{conVarParts[0]} {clientValue}");
                     player.ReplicateConVar(conVarParts[0], conVarParts[1]);
                 }
-                else
+                catch
                 {
+                    // If replication fails, try server command
                     string defaultValue = GameModifiersUtils.GetConVarStringValue(foundConVar);
                     clientConVarRollbackList.Add($"{conVarParts[0]} {defaultValue}");
-
-                    if ((foundConVar.Flags & ConVarFlags.FCVAR_CLIENT_CAN_EXECUTE) != 0)
-                    {
-                        player.ExecuteClientCommand(defaultValue);
-                    }
-                    else
-                    {
-                        player.ExecuteClientCommandFromServer(defaultValue);
-                    }
+                    player.ExecuteClientCommandFromServer(conVar);
                 }
             }
         }
@@ -199,20 +193,14 @@ public class ModifierConfig
                     return;
                 }
 
-                if ((foundConVar.Flags & ConVarFlags.FCVAR_REPLICATED) != 0)
+                // Removed foundConVar.Flags checks - try replication first, fallback to server command
+                try
                 {
                     player.ReplicateConVar(conVarParts[0], conVarParts[1]);
                 }
-                else
+                catch
                 {
-                    if ((foundConVar.Flags & ConVarFlags.FCVAR_CLIENT_CAN_EXECUTE) != 0)
-                    {
-                        player.ExecuteClientCommand(conVar);
-                    }
-                    else
-                    {
-                        player.ExecuteClientCommandFromServer(conVar);
-                    }
+                    player.ExecuteClientCommandFromServer(conVar);
                 }
             }
         }

@@ -198,48 +198,36 @@ internal static class GameModifiersUtils
     public static string GetConVarStringValue(ConVar? conVar)
     {
         if (conVar == null)
-        {
             return "";
-        }
 
-        switch (conVar.Type)
+        // Strings first
+        if (!string.IsNullOrEmpty(conVar.StringValue))
+            return conVar.StringValue;
+
+        // Try primitive types
+        try { return conVar.GetPrimitiveValue<bool>().ToString(CultureInfo.InvariantCulture); } catch { }
+        try { return conVar.GetPrimitiveValue<int>().ToString(CultureInfo.InvariantCulture); } catch { }
+        try { return conVar.GetPrimitiveValue<uint>().ToString(CultureInfo.InvariantCulture); } catch { }
+        try { return conVar.GetPrimitiveValue<long>().ToString(CultureInfo.InvariantCulture); } catch { }
+        try { return conVar.GetPrimitiveValue<ulong>().ToString(CultureInfo.InvariantCulture); } catch { }
+        try { return conVar.GetPrimitiveValue<float>().ToString(CultureInfo.InvariantCulture); } catch { }
+        try { return conVar.GetPrimitiveValue<double>().ToString(CultureInfo.InvariantCulture); } catch { }
+
+        // Try vector-based values
+        try { return conVar.GetNativeValue<QAngle>().ToString(); } catch { }
+        try { return conVar.GetNativeValue<Vector>().ToString(); } catch { }
+        try
         {
-            case ConVarType.Bool:
-                return conVar.GetPrimitiveValue<bool>().ToString(CultureInfo.InvariantCulture);
-            case ConVarType.Float32:
-                return conVar.GetPrimitiveValue<float>().ToString(CultureInfo.InvariantCulture);
-            case ConVarType.Float64:
-                return conVar.GetPrimitiveValue<double>().ToString(CultureInfo.InvariantCulture);
-            case ConVarType.UInt16:
-                return conVar.GetPrimitiveValue<ushort>().ToString(CultureInfo.InvariantCulture);
-            case ConVarType.Int16:
-                return conVar.GetPrimitiveValue<short>().ToString(CultureInfo.InvariantCulture);
-            case ConVarType.UInt32:
-                return conVar.GetPrimitiveValue<uint>().ToString(CultureInfo.InvariantCulture);
-            case ConVarType.Int32:
-                return conVar.GetPrimitiveValue<int>().ToString(CultureInfo.InvariantCulture);
-            case ConVarType.Int64:
-                return conVar.GetPrimitiveValue<long>().ToString(CultureInfo.InvariantCulture);
-            case ConVarType.UInt64:
-                return conVar.GetPrimitiveValue<ulong>().ToString(CultureInfo.InvariantCulture);
-            case ConVarType.String:
-                return conVar.StringValue;
-            case ConVarType.Qangle:
-                return conVar.GetNativeValue<QAngle>().ToString();
-            case ConVarType.Vector2:
-            {
-                Vector2D vector2D = conVar.GetNativeValue<Vector2D>();
-                return $"{vector2D.X:n2} {vector2D.Y:n2}";
-            }
-            case ConVarType.Vector3:
-                return conVar.GetNativeValue<Vector>().ToString();
-            case ConVarType.Vector4:
-            case ConVarType.Color:
-            {
-                Vector4D vector4D = conVar.GetNativeValue<Vector4D>();
-                return $"{vector4D.X:n2} {vector4D.Y:n2} {vector4D.Z:n2} {vector4D.W:n2}";
-            }
+            var v2 = conVar.GetNativeValue<Vector2D>();
+            return $"{v2.X:n2} {v2.Y:n2}";
         }
+        catch { }
+        try
+        {
+            var v4 = conVar.GetNativeValue<Vector4D>();
+            return $"{v4.X:n2} {v4.Y:n2} {v4.Z:n2} {v4.W:n2}";
+        }
+        catch { }
 
         return "";
     }
