@@ -16,10 +16,10 @@ namespace GameModifiers;
 
 public class GameModifiersCore : BasePlugin, IPluginConfig<GameModifiersConfig>
 {
-    public override string ModuleName => "Game Modifiers";
-    public override string ModuleAuthor => "Shr00mDev";
+    public override string ModuleName => "Game Modifiers - Reloaded";
+    public override string ModuleAuthor => "1pseftis | Original by Shr00mDev";
     public override string ModuleDescription => "Apply game modifiers dynamically based of pre-defined classes or config files.";
-    public override string ModuleVersion => "1.0.3";
+    public override string ModuleVersion => "1.0.1";
     public GameModifiersConfig Config { get; set; } = new();
     public bool RandomRoundsEnabled { get; private set; } = false;
     private List<GameModifierBase> RegisteredModifiers { get; } = new();
