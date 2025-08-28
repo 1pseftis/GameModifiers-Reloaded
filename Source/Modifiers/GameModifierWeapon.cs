@@ -180,6 +180,84 @@ public class GameModifierOnePerMag : GameModifierWeapon
     }
 }
 
+public class GameModifierTeamReload : GameModifierWeapon
+{
+    public override string Name => "TeamReload";
+    public override string Description => "When one player reloads, their whole team reloads too!";
+    public override bool SupportsRandomRounds => true;
+
+    public override void Enabled()
+    {
+        base.Enabled();
+
+        if (Core != null)
+        {
+            Core.RegisterEventHandler<EventWeaponReload>(OnWeaponReload);
+        }
+    }
+
+    public override void Disabled()
+    {
+        if (Core != null)
+        {
+            Core.DeregisterEventHandler<EventWeaponReload>(OnWeaponReload);
+        }
+
+        base.Disabled();
+    }
+
+    private HookResult OnWeaponReload(EventWeaponReload ev, GameEventInfo info)
+    {
+        CCSPlayerController? reloader = ev.Userid;
+        if (reloader == null || !reloader.IsValid || !reloader.PawnIsAlive)
+            return HookResult.Continue;
+
+        // Get team of reloader
+        var team = reloader.TeamNum;
+
+        // Apply reload to teammates
+        foreach (var teammate in Utilities.GetPlayers().Where(p => p.TeamNum == team && p != reloader))
+        {
+            ForceReload(teammate);
+        }
+
+        return HookResult.Continue;
+    }
+
+    private void ForceReload(CCSPlayerController player)
+    {
+        var pawn = player.PlayerPawn.Value;
+        if (pawn == null || !pawn.IsValid) return;
+
+        var weapon = pawn.WeaponServices?.ActiveWeapon.Value;
+        if (weapon == null || !weapon.IsValid) return;
+
+        // Get weapon VData for clip information
+        CCSWeaponBaseVData? weaponVData = weapon.As<CCSWeaponBase>().VData;
+        if (weaponVData == null) return;
+
+        // Skip if already full clip or no reserve ammo
+        if (weapon.Clip1 >= weaponVData.MaxClip1) return;
+        if (weapon.ReserveAmmo[0] <= 0) return;
+
+        Server.NextFrame(() =>
+        {
+            // Calculate how much ammo we need to fill the clip
+            int neededAmmo = weaponVData.MaxClip1 - weapon.Clip1;
+            int availableAmmo = weapon.ReserveAmmo[0];
+            int ammoToUse = Math.Min(neededAmmo, availableAmmo);
+
+            // Refill the clip
+            weapon.Clip1 += ammoToUse;
+            weapon.ReserveAmmo[0] -= ammoToUse;
+
+            // Update state
+            Utilities.SetStateChanged(weapon, "CBasePlayerWeapon", "m_iClip1");
+            Utilities.SetStateChanged(weapon, "CBasePlayerWeapon", "m_pReserveAmmo");
+        });
+    }
+}
+
 public class GameModifierOneInTheChamber : GameModifierWeapon
 {
     public override string Name => "OneInTheChamber";

@@ -319,7 +319,26 @@ internal static class GameModifiersUtils
 
     public static Vector? GetRandomLocation()
     {
-        return NavMesh.GetRandomPosition();
+        try
+        {
+            return NavMesh.GetRandomPosition();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[GameModifiersUtils::GetRandomLocation] WARNING: Failed to get random location from NavMesh: {ex.Message}");
+            // Fallback to using spawn point as random location
+            var spawnPoints = Utilities.FindAllEntitiesByDesignerName<SpawnPoint>("info_player_terrorist")
+                .Concat(Utilities.FindAllEntitiesByDesignerName<SpawnPoint>("info_player_counterterrorist"))
+                .ToList();
+
+            if (spawnPoints.Any())
+            {
+                var randomSpawn = spawnPoints[Random.Shared.Next(spawnPoints.Count)];
+                return randomSpawn.AbsOrigin;
+            }
+
+            return null;
+        }
     }
 
     public static Vector? GetSpawnLocation(CsTeam team)
@@ -426,8 +445,9 @@ internal static class GameModifiersUtils
         Vector? randomLocation = GetRandomLocation();
         if (randomLocation == null)
         {
-            Console.WriteLine($"[GameModifiersUtils::TeleportPlayerToRandomSpot] WARNING: Failed to find random location for {player.PlayerName}!");
-            return false;
+            Console.WriteLine($"[GameModifiersUtils::TeleportPlayerToRandomSpot] WARNING: Failed to find random location for {player.PlayerName}, using spawn area instead!");
+            // Teleport back to the spawn area
+            return TeleportPlayerToSpawnArea(player);
         }
 
         TeleportPlayer(player, randomLocation);
