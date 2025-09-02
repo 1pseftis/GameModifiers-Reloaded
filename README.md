@@ -33,12 +33,12 @@ All suggestions, bug reports, or enhancement ideas should be submitted as [issue
 |------------------|--------------------------------------------|--------|
 | MoreDamage       | Damage dealt is doubled                     | ✔️ |
 | LessDamage       | Damage dealt is halved                      | ✔️ |
-| LongerFlashes    | Flashbang effect lasts 3x longer            | ✔️ |
-| RainbowSmokes    | Smokes have random colors                   | ✔️ |
+| Xray             | Everyone can see each other through walls   | ✔️ |
+| ThirdPerson      | Everyone is in third person view            | ✔️ |
 | Juggernaut       | Everyone’s health set to 500                | ✔️ |
 | GlassCannon      | One-shot kill for everyone                  | ✔️ |
 | Cloaked          | Everyone is invisible                       | ✔️ |
-| TeleportOnReload | Teleports player to random spot on reload   | ✔️ |
+| ResetOnReload    | Teleports back to their spawn on reload     | ✔️ |
 | …                | *and 40+ more listed in full below!*        | ✔️ |
 
 👉 [Click here to view the full list of modifiers](https://github.com/1pseftis/GameModifiers-Reloaded/wiki/Modifiers)  
@@ -78,9 +78,7 @@ csgo/addons/counterstrikesharp/plugins/
 The config file is generated at:  
 
 ```
-
 csgo/addons/counterstrikesharp/configs/plugins/GameModifiers/GameModifiers.json
-
 ````
 
 Default:
