@@ -1,4 +1,4 @@
-﻿
+﻿// Imports
 using System;
 using System.Linq;
 using System.Collections.Generic;
@@ -9,17 +9,47 @@ using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Utils;
+using CounterStrikeSharp.API.Modules.Timers;
 
 using GameModifiers.Modifiers;
 
+// Namespace
 namespace GameModifiers;
+
+// Vote session class to manage voting state
+public class VoteSession
+{
+    public bool IsActive { get; set; } = false;
+    public DateTime StartTime { get; set; }
+    public List<CCSPlayerController> VotedPlayers { get; set; } = new();
+    public List<CCSPlayerController> YesVotes { get; set; } = new();
+    public List<CCSPlayerController> NoVotes { get; set; } = new();
+    public int RequestedRounds { get; set; } = 0;
+    public CCSPlayerController? Initiator { get; set; }
+    public Timer? TimeoutTimer { get; set; }
+    
+    public void Reset()
+    {
+        IsActive = false;
+        VotedPlayers.Clear();
+        YesVotes.Clear();
+        NoVotes.Clear();
+        RequestedRounds = 0;
+        Initiator = null;
+        TimeoutTimer?.Kill();
+        TimeoutTimer = null;
+    }
+}
 
 public class GameModifiersCore : BasePlugin, IPluginConfig<GameModifiersConfig>
 {
+    // General plugin information
     public override string ModuleName => "Game Modifiers - Reloaded";
     public override string ModuleAuthor => "1pseftis | Original by Shr00mDev";
     public override string ModuleDescription => "Apply game modifiers dynamically based of pre-defined classes or config files.";
     public override string ModuleVersion => "1.0.1";
+    
+    // Configuration
     public GameModifiersConfig Config { get; set; } = new();
     public bool RandomRoundsEnabled { get; private set; } = false;
     private List<GameModifierBase> RegisteredModifiers { get; } = new();
@@ -28,13 +58,45 @@ public class GameModifiersCore : BasePlugin, IPluginConfig<GameModifiersConfig>
 
     private int _minRandomRounds = 1;
     private int _maxRandomRounds = 1;
+
+    // Allow Random instance injection for testability
+    public Random RandomGenerator { get; set; } = new Random();
+    /// <summary>
+    /// Computes the number of rounds for a vote, using the configured min/max bounds.
+    /// </summary>
+    public int GetRandomRounds()
+    {
+        return RandomGenerator.Next(Config.VoteMinRounds, Config.VoteMaxRounds + 1);
+    }
     
+    // Voting system variables
+    private int _voteEnabledRoundsRemaining = 0;
+    private bool _voteEnabledRandomRounds = false;
+    private VoteSession _currentVote = new();
+    private DateTime _lastVoteEndTime = DateTime.MinValue;
+    
+    // Configuration parsed event
     public void OnConfigParsed(GameModifiersConfig config)
     {
         Config = config;
 
+        // Set random modifiers rounds min/max from config
         _minRandomRounds = config.MinRandomRounds;
         _maxRandomRounds = config.MaxRandomRounds;
+
+        // Validate vote configuration
+        if (config.VotePercentageRequired < 10 || config.VotePercentageRequired > 100)
+        {
+            GameModifiersUtils.PrintToConsole($"[GameModifiers] Invalid VotePercentageRequired: {config.VotePercentageRequired}. Must be between 10 and 100. Using minimum value: 10");
+            config.VotePercentageRequired = 10;
+        }
+
+        if (config.VoteMinRounds > config.VoteMaxRounds)
+        {
+            Console.WriteLine("[GameModifiers::OnConfigParsed] WARNING: VoteMinRounds cannot be greater than VoteMaxRounds, using default values.");
+            Config.VoteMinRounds = 3;
+            Config.VoteMaxRounds = 10;
+        }
     }
 
     public override void Load(bool hotReload)
@@ -336,6 +398,40 @@ public class GameModifiersCore : BasePlugin, IPluginConfig<GameModifiersConfig>
         ToggleRandomRounds();
     }
 
+    // Vote for random rounds
+    [ConsoleCommand("css_rr", "Vote for random rounds")]
+    [ConsoleCommand("css_randomroundsvote", "Vote for random rounds")]
+    public void OnRandomRoundsVote(CCSPlayerController? player, CommandInfo info)
+    {
+        if (!Config.EnableVotingSystem)
+        {
+            GameModifiersUtils.PrintTitleToChat(player, "Voting system is disabled.");
+            return;
+        }
+
+        if (player == null) return;
+
+        StartRandomRoundsVote(player);
+    }
+
+    // Vote yes
+    [ConsoleCommand("css_yes", "Vote yes in current vote")]
+    [ConsoleCommand("css_y", "Vote yes in current vote")]
+    public void OnVoteYes(CCSPlayerController? player, CommandInfo info)
+    {
+        if (!Config.EnableVotingSystem || player == null) return;
+        CastVote(player, true);
+    }
+
+    // Vote no
+    [ConsoleCommand("css_no", "Vote no in current vote")]
+    [ConsoleCommand("css_n", "Vote no in current vote")]
+    public void OnVoteNo(CCSPlayerController? player, CommandInfo info)
+    {
+        if (!Config.EnableVotingSystem || player == null) return;
+        CastVote(player, false);
+    }
+
     // !MinRandomRounds - Set the min number of random round modifiers to be active each round.
     [ConsoleCommand("css_minrandomrounds", "Set the min number of random round modifiers to be active each round.")]
     [CommandHelper(1, "<min number>")]
@@ -483,6 +579,24 @@ public class GameModifiersCore : BasePlugin, IPluginConfig<GameModifiersConfig>
         if (RandomRoundsEnabled)
         {
             RemoveAllModifiers();
+            
+            // Check if this was a vote-enabled session with limited rounds
+            if (_voteEnabledRandomRounds && _voteEnabledRoundsRemaining > 0)
+            {
+                _voteEnabledRoundsRemaining--;
+                
+                if (_voteEnabledRoundsRemaining <= 0)
+                {
+                    // Disable random rounds after specified rounds
+                    _voteEnabledRandomRounds = false;
+                    ToggleRandomRounds(); // This will disable random rounds
+                    GameModifiersUtils.PrintTitleToChatAll("Vote-enabled random rounds session ended!");
+                }
+                else
+                {
+                    GameModifiersUtils.PrintTitleToChatAll($"Random rounds: {_voteEnabledRoundsRemaining} rounds remaining");
+                }
+            }
         }
 
         return HookResult.Continue;
@@ -891,5 +1005,167 @@ public class GameModifiersCore : BasePlugin, IPluginConfig<GameModifiersConfig>
             modifier.Enabled();
             ActiveModifiers.Add(modifier);
         }
+    }
+
+    private void StartRandomRoundsVote(CCSPlayerController initiator)
+    {
+        var eligiblePlayers = GetEligibleVotingPlayers();
+        
+        if (eligiblePlayers.Count < Config.MinPlayersForVote)
+        {
+            GameModifiersUtils.PrintTitleToChat(initiator, $"Not enough players to start a vote. Minimum: {Config.MinPlayersForVote}");
+            return;
+        }
+
+        if (_currentVote.IsActive)
+        {
+            GameModifiersUtils.PrintTitleToChat(initiator, "A vote is already in progress.");
+            return;
+        }
+
+        if (RandomRoundsEnabled)
+        {
+            GameModifiersUtils.PrintTitleToChat(initiator, "Random rounds are already active.");
+            return;
+        }
+
+        // Check cooldown
+        if (_lastVoteEndTime != DateTime.MinValue && 
+            (DateTime.Now - _lastVoteEndTime).TotalSeconds < Config.CooldownBetweenVotesSeconds)
+        {
+            var remainingCooldown = Config.CooldownBetweenVotesSeconds - (DateTime.Now - _lastVoteEndTime).TotalSeconds;
+            GameModifiersUtils.PrintTitleToChat(initiator, $"Vote cooldown active. Wait {remainingCooldown:F0} more seconds.");
+            return;
+        }
+
+        if (RegisteredModifiers.Count <= 0)
+        {
+            GameModifiersUtils.PrintTitleToChat(initiator, "No modifiers are registered! Cannot start random rounds vote.");
+            return;
+        }
+
+        // Generate random round count using dedicated method
+        int randomRounds = GetRandomRounds();
+
+        // Start the vote
+        _currentVote.IsActive = true;
+        _currentVote.StartTime = DateTime.Now;
+        _currentVote.Initiator = initiator;
+        _currentVote.RequestedRounds = randomRounds;
+
+        // Timer fix: capture vote instance
+        var voteSession = _currentVote;
+        _currentVote.TimeoutTimer = AddTimer(Config.VoteTimeoutSeconds, () => {
+            // Only end the vote if it's still active and matches the captured vote
+            if (voteSession.IsActive && ReferenceEquals(_currentVote, voteSession))
+            {
+                EndVote(false, "Vote timed out.");
+            }
+        });
+
+        // Announce the vote
+        string voteMessage = $"{initiator.PlayerName} started a vote for random rounds ({randomRounds} rounds)!";
+
+        GameModifiersUtils.PrintTitleToChatAll(voteMessage);
+        GameModifiersUtils.PrintToChatAll($"Type !yes or !y to vote YES, !no or !n to vote NO");
+        GameModifiersUtils.PrintToChatAll($"Vote ends in {Config.VoteTimeoutSeconds} seconds");
+
+        int requiredVotes = (int)Math.Ceiling(eligiblePlayers.Count * Config.VotePercentageRequired / 100.0f);
+        GameModifiersUtils.PrintToChatAll($"Requires {requiredVotes}/{eligiblePlayers.Count} players to vote YES");
+
+        GameModifiersUtils.ShowMessageCentreAll($"Vote: Random Rounds ({randomRounds} rounds)\u2029Type !yes or !no\u2029{Config.VoteTimeoutSeconds}s remaining");
+    }
+
+    private void CastVote(CCSPlayerController player, bool voteYes)
+    {
+        if (!_currentVote.IsActive)
+        {
+            GameModifiersUtils.PrintTitleToChat(player, "No active vote.");
+            return;
+        }
+
+        var eligiblePlayers = GetEligibleVotingPlayers();
+        if (!eligiblePlayers.Contains(player))
+        {
+            GameModifiersUtils.PrintTitleToChat(player, "You are not eligible to vote.");
+            return;
+        }
+
+        if (_currentVote.VotedPlayers.Contains(player))
+        {
+            GameModifiersUtils.PrintTitleToChat(player, "You have already voted.");
+            return;
+        }
+
+        _currentVote.VotedPlayers.Add(player);
+        if (voteYes)
+        {
+            _currentVote.YesVotes.Add(player);
+        }
+        else
+        {
+            _currentVote.NoVotes.Add(player);
+        }
+
+        GameModifiersUtils.PrintTitleToChat(player, $"You voted {(voteYes ? "YES" : "NO")}.");
+
+        // Check if vote should end
+        CheckVoteStatus(eligiblePlayers);
+    }
+
+    private void CheckVoteStatus(List<CCSPlayerController> eligiblePlayers)
+    {
+        int requiredVotes = (int)Math.Ceiling(eligiblePlayers.Count * Config.VotePercentageRequired / 100.0f);
+        
+        // Check if enough YES votes
+        if (_currentVote.YesVotes.Count >= requiredVotes)
+        {
+            EndVote(true, $"Vote passed! ({_currentVote.YesVotes.Count}/{eligiblePlayers.Count} voted YES)");
+            return;
+        }
+
+        // Check if impossible to pass (too many NO votes)
+        int maxPossibleYes = _currentVote.YesVotes.Count + (eligiblePlayers.Count - _currentVote.VotedPlayers.Count);
+        if (maxPossibleYes < requiredVotes)
+        {
+            EndVote(false, $"Vote failed! Not enough YES votes possible ({_currentVote.YesVotes.Count}/{eligiblePlayers.Count})");
+            return;
+        }
+
+        // Update players on current status
+        int remainingTime = Config.VoteTimeoutSeconds - (int)(DateTime.Now - _currentVote.StartTime).TotalSeconds;
+        GameModifiersUtils.PrintToChatAll($"Vote status: {_currentVote.YesVotes.Count} YES, {_currentVote.NoVotes.Count} NO ({_currentVote.VotedPlayers.Count}/{eligiblePlayers.Count} voted) - {remainingTime}s left");
+    }
+
+    private void EndVote(bool passed, string message)
+    {
+        if (!_currentVote.IsActive) return;
+
+        GameModifiersUtils.PrintTitleToChatAll(message);
+
+        if (passed)
+        {
+            // Set up round counting system
+            _voteEnabledRoundsRemaining = _currentVote.RequestedRounds;
+            _voteEnabledRandomRounds = true;
+            
+            GameModifiersUtils.PrintTitleToChatAll($"Random rounds enabled for {_currentVote.RequestedRounds} rounds starting next round!");
+            
+            // Enable random rounds (will activate next round, not immediately)
+            if (!RandomRoundsEnabled)
+            {
+                ToggleRandomRounds();
+            }
+        }
+
+        _lastVoteEndTime = DateTime.Now;
+        _currentVote.Reset();
+    }
+
+    private List<CCSPlayerController> GetEligibleVotingPlayers()
+    {
+        return Utilities.GetPlayers()
+            .Where(p => p != null && p.IsValid && !p.IsBot && p.Connected == PlayerConnectedState.PlayerConnected)
+            .ToList();
     }
 }
