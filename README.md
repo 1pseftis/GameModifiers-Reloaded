@@ -1,3 +1,19 @@
+> [!IMPORTANT]
+> **GameModifiers Reloaded is discontinued.** This repository is archived and kept read-only for reference. No further updates, fixes or support are planned.
+
+## Recommended alternatives
+
+For your CS2 server, consider these projects:
+
+- [Kandru/cs2-roll-the-dice](https://github.com/Kandru/cs2-roll-the-dice) — Roll the Dice for Counter-Strike 2.
+- [Juzlus/jRandomSkills](https://github.com/Juzlus/jRandomSkills) — random skills for players each round in CS2.
+
+These are independent projects. See their documentation for features, installation and requirements; they are not drop-in replacements for this plugin.
+
+The original documentation below is retained for historical reference. Compatibility with current CS2 or CounterStrikeSharp versions is not maintained.
+
+---
+
 <div align="center">
 
 # 🎮 CS2 GameModifiers Reloaded
@@ -6,7 +22,7 @@
 ![GitHub discussions](https://img.shields.io/github/discussions/1pseftis/GameModifiers-Reloaded)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/1pseftis/GameModifiers-Reloaded)
 
-*A maintained & updated fork of the original [CS2-GameModifiers-Plugin](https://github.com/Lewisscrivens/CS2-GameModifiers-Plugin), now discontinued.*  
+*A discontinued fork of the original [CS2-GameModifiers-Plugin](https://github.com/Lewisscrivens/CS2-GameModifiers-Plugin), now discontinued.*  
 Adds **fun, chaotic, and unique game modifiers** to CS2 servers — inspired by [NadeKing’s video](https://www.youtube.com/watch?v=OQQBUFB56Iw&ab_channel=NadeKing).  
 
 </div>
@@ -19,9 +35,8 @@ Adds **fun, chaotic, and unique game modifiers** to CS2 servers — inspired by 
 - 🎲 Random round mode (new modifiers every round!)
 - ⚡ Easy to configure with JSON & ConVar modifiers
 - 🧩 Lightweight, plug-and-play with CounterStrikeSharp
-- 🔄 Actively maintained with fixes & improvements
 
-All suggestions, bug reports, or enhancement ideas should be submitted as [issues](https://github.com/1pseftis/GameModifiers-Reloaded/issues).
+Existing issues and releases are retained as historical records. This project is no longer accepting contributions or support requests.
 
 ---
 
@@ -81,7 +96,7 @@ The config file is generated at:
 
 csgo/addons/counterstrikesharp/configs/plugins/GameModifiers/GameModifiers.json
 
-````
+```
 
 Default:
 ```json
@@ -93,7 +108,7 @@ Default:
   "DisabledModifiers": [],
   "ConfigVersion": 1
 }
-````
+```
 
 * `ShowCentreMsg`: Show messages when random rounds toggle
 * `CanRepeat`: Allow same modifier two rounds in a row
@@ -113,9 +128,9 @@ This project includes **Premake5** and scripts for easy builds.
 
 ---
 
-## 🚧 Roadmap / TODO
+## 🚧 Historical ideas (not planned)
 
-Planned or experimental modifiers:
+Previously considered modifiers, retained for reference only. No implementation is planned:
 
 * **PropHunt** → CTs become props, hide from Ts
 * **RandomSmokes** → Random smoke grenades spawn across map
@@ -127,9 +142,7 @@ Planned or experimental modifiers:
 
 ## 📚 Contributing
 
-* 🐞 Found a bug? → Open an [issue](https://github.com/1pseftis/GameModifiers-Reloaded/issues)
-* 💡 Got an idea? → Start a [discussion](https://github.com/1pseftis/GameModifiers-Reloaded/discussions)
-* 🔨 Want to contribute code? → Fork & submit a PR
+Development has ended and this repository is read-only. You may fork the source under its existing license. For the recommended alternatives, follow each project\'s own contribution guidelines.
 
 ---
 
@@ -144,6 +157,6 @@ Looking for the **full list of modifiers**, advanced config options, or develope
 
 🔥 Enjoy chaotic Counter-Strike with **CS2 GameModifiers Reloaded** 🔥
 
-Maintained with ❤️ by [1pseftis](https://github.com/1pseftis)
+Originally maintained by [1pseftis](https://github.com/1pseftis)
 
 </div>
