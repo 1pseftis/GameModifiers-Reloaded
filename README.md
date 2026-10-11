@@ -8,7 +8,7 @@ For your CS2 server, consider these projects:
 - [Kandru/cs2-roll-the-dice](https://github.com/Kandru/cs2-roll-the-dice) — Roll the Dice for Counter-Strike 2.
 - [Juzlus/jRandomSkills](https://github.com/Juzlus/jRandomSkills) — random skills for players each round in CS2.
 
-These are independent projects. See their documentation for features, installation and requirements; they are not drop-in replacements for this plugin.
+These are independent projects. See their documentation for features, installation and requirements; features and configuration may differ from this plugin.
 
 The original documentation below is retained for historical reference. Compatibility with current CS2 or CounterStrikeSharp versions is not maintained.
 
@@ -142,7 +142,7 @@ Previously considered modifiers, retained for reference only. No implementation 
 
 ## 📚 Contributing
 
-Development has ended and this repository is read-only. You may fork the source under its existing license. For the recommended alternatives, follow each project\'s own contribution guidelines.
+Development has ended and this repository is read-only. You may fork the source under its existing license. For the recommended alternatives, follow each project's own contribution guidelines.
 
 ---
 
